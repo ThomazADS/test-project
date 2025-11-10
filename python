@@ -1,0 +1,1 @@
+docker run --rm -v ./:/opt/ --entrypoint python python311thomaz /opt/$@
