@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [ '3.10', '3.11' ]
+
+    steps:
+      - name: Checkout do codigo
+        uses: actions/checkout@v4
+
+      - name: Configura Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache do pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
+            ${{ runner.os }}-pip-
+
+      - name: Instala dependencias
+        run: |
+          if [ -f requirements.txt ]; then 
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+          else
+            echo "Sem requirements.txt, pulando instalacao."
+          fi
+
+      - name: Rodada rapida de verificacao
+        run: python -c "import sys; print('Hello, CI! Python', sys.version)"
+
+      - name: Debug importlib real
+        run: |
+          python - << 'PY'
+          import importlib, sys
+          print("importlib carregado de:", getattr(importlib, "__file__", None))
+          import importlib.util
+          print("tem importlib.util: ", importlib.util is not None)
+          print("python:", sys.version)
+          PY
+
+      - name: Tetes (pytest se existir, senao hello)
+        run: |
+          if python -c "import importlib.util; import sys; sys.exit(0 if importlib.util.find_spec('pytest') else 1)"; then
+            pytest -q || (echo "Pytest falhou" && exit 1)
+          else
+            python -c "import sys; print('Hello, CI! Python', sys.version)"
+          fi
