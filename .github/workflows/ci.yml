@@ -43,6 +43,14 @@ jobs:
       - name: Rodada rapida de verificacao
         run: python -c "import sys; print('Hello, CI! Python', sys.version)"
 
+      - name: Debug importlib real
+        run: |
+          python - << 'PY'
+          import importlib, sys
+          print("importlib carregado de:", getattr(importlib, "__file__", None))
+          print("python:", sys.version)
+          PY
+
       - name: Tetes (pytest se existir, senao hello)
         run: |
           if python -c "import importlib; import sys; sys.exit(0 if importlib.util.find_spec('pytest') else 1)"; then
