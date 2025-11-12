@@ -48,12 +48,14 @@ jobs:
           python - << 'PY'
           import importlib, sys
           print("importlib carregado de:", getattr(importlib, "__file__", None))
+          import importlib.util
+          print("tem importlib.util: ", importlib.util is not None)
           print("python:", sys.version)
           PY
 
       - name: Tetes (pytest se existir, senao hello)
         run: |
-          if python -c "import importlib; import sys; sys.exit(0 if importlib.util.find_spec('pytest') else 1)"; then
+          if python -c "import importlib.util; import sys; sys.exit(0 if importlib.util.find_spec('pytest') else 1)"; then
             pytest -q || (echo "Pytest falhou" && exit 1)
           else
             python -c "import sys; print('Hello, CI! Python', sys.version)"
